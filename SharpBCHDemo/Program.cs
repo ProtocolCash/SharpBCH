@@ -22,8 +22,11 @@
  */
 
 using System;
+using System.Text;
 using SharpBCH;
 using SharpBCH.CashAddress;
+using SharpBCH.Script;
+using SharpBCH.Util;
 
 namespace SharpBCHDemo
 {
@@ -57,9 +60,22 @@ namespace SharpBCHDemo
                     break;
             }
 
+            // let's use script builder now
+            var outputScript = ScriptBuilder.CreateOutputScript(decoded.Type, decoded.Hash);
+            // same thing if we go straight from a Cash Address
+            outputScript = ScriptBuilder.CreateOutputScript("bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a");
+            Console.WriteLine("Output script from ScriptBuilder: " + outputScript);
+            Console.WriteLine("Output script RAW from ScriptBuilder: " + ByteHexConverter.ByteArrayToHex(outputScript.ScriptBytes));
 
-            Console.WriteLine("Encoding output script 'OP_DUP OP_HASH160 76a04053bda0a88bda5177b86a15c3b29f559873 OP_EQUALVERIFY OP_CHECKSIG'...");
+            // What about if we want to create an OP_RETURN output?
+            // ASCII encode "My Bitcoin OP_RETURN!" and create an output script
+            var opReturn = ScriptBuilder.CreateOpReturn(Encoding.ASCII.GetBytes("My Bitcoin OP_RETURN!"));
+            Console.WriteLine("OP_RETURN script from ScriptBuilder: " + opReturn);
+            Console.WriteLine("OP_RETURN script RAW from ScriptBuilder: " + ByteHexConverter.ByteArrayToHex(opReturn.ScriptBytes));
+
+
             // encode a hash160 from an output script as a cash address (demo script is P2PKH)
+            Console.WriteLine("Encoding output script 'OP_DUP OP_HASH160 76a04053bda0a88bda5177b86a15c3b29f559873 OP_EQUALVERIFY OP_CHECKSIG'...");
             // use ByteHexConverter to convert the readable hex to raw byte data (as it would actually be encoded in an output script)
             var encoded = CashAddress.EncodeCashAddress(AddressPrefix.bitcoincash, ScriptType.P2PKH,
                 ByteHexConverter.StringToByteArray("76a04053bda0a88bda5177b86a15c3b29f559873"));

@@ -21,15 +21,27 @@
  *
  */
 
-namespace SharpBCH.CashAddress
+using System.Diagnostics.CodeAnalysis;
+
+namespace SharpBCH
 {
     /// <summary>
-    ///     A decoded address, represented as raw byte data, script type, and network prefix
+    ///     Cash Address script type version numbers (only 2 so far)
     /// </summary>
-    public class DecodedBitcoinAddress
+    public enum ScriptType
     {
-        public string Prefix { get; set; }
-        public ScriptType Type { get; set; }
-        public byte[] Hash { get; set; }
+        P2PKH = 0x0,
+        P2SH = 0x8
+    }
+
+    /// <summary>
+    ///     Cash Address network prefixes
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public enum AddressPrefix
+    {
+        bitcoincash,
+        bchtest,
+        bchreg
     }
 }

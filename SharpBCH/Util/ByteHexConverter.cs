@@ -24,7 +24,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SharpBCH.CashAddress
+namespace SharpBCH.Util
 {
     /// <summary>
     ///     (Probably over-) optimized ByteToHex conversion script

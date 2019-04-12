@@ -21,15 +21,19 @@
  *
  */
 
-namespace SharpBCH.CashAddress
+using System;
+
+namespace SharpBCH.Util
 {
-    /// <summary>
-    ///     A decoded address, represented as raw byte data, script type, and network prefix
-    /// </summary>
-    public class DecodedBitcoinAddress
+    public static class StringHelper
     {
-        public string Prefix { get; set; }
-        public ScriptType Type { get; set; }
-        public byte[] Hash { get; set; }
+        public static string ReplaceFirst(this string text, string search, string replace)
+        {
+            var pos = text.IndexOf(search, StringComparison.Ordinal);
+            if (pos < 0)
+                return text;
+
+            return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+        }
     }
 }
