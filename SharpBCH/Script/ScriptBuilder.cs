@@ -162,10 +162,10 @@ namespace SharpBCH.Script
                 return new[] { (byte) OpCodeType.OP_PUSHDATA1, (byte)dataLength };
             // 2 byte pushdata
             if (dataLength < 255 * 255)
-                return new[] { (byte)OpCodeType.OP_PUSHDATA1, (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
+                return new[] { (byte)OpCodeType.OP_PUSHDATA2, (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
 
             // 4 byte pushdata
-            return new[] { (byte)OpCodeType.OP_PUSHDATA1, (byte)((dataLength & 0xFF000000) >> 24),
+            return new[] { (byte)OpCodeType.OP_PUSHDATA4, (byte)((dataLength & 0xFF000000) >> 24),
                 (byte)((dataLength & 0x00FF0000) >> 16), (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
             
         }
