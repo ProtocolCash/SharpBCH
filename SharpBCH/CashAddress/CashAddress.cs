@@ -156,12 +156,7 @@ namespace SharpBCH.CashAddress
             // hash is the rest of the data after the version byte
             var hash = payloadData.Skip(1).ToArray();
 
-            return new DecodedBitcoinAddress
-            {
-                Prefix = prefix,
-                Type = type,
-                Hash = hash
-            };
+            return new DecodedBitcoinAddress(prefix, type, hash);
         }
 
         /// <summary>

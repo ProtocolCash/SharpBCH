@@ -28,6 +28,13 @@ namespace SharpBCH.CashAddress
     /// </summary>
     public class DecodedBitcoinAddress
     {
+        public DecodedBitcoinAddress(string prefix, ScriptType type, byte[] hash)
+        {
+            Prefix = prefix;
+            Type = type;
+            Hash = hash;
+        }
+
         public string Prefix { get; set; }
         public ScriptType Type { get; set; }
         public byte[] Hash { get; set; }
