@@ -93,9 +93,6 @@ namespace SharpBCHDemo
             foreach (var output in tx.Outputs)
                 Console.WriteLine(output);
 
-
-                              //"d01babce88a9b3d25a14f46ea4432894965106675c54314867e1cf263dae03eb);
-
             // wait
             Console.ReadKey();
         }
