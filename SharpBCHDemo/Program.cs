@@ -26,6 +26,7 @@ using System.Text;
 using SharpBCH;
 using SharpBCH.CashAddress;
 using SharpBCH.Script;
+using SharpBCH.Transaction;
 using SharpBCH.Util;
 
 namespace SharpBCHDemo
@@ -81,6 +82,19 @@ namespace SharpBCHDemo
                 ByteHexConverter.StringToByteArray("76a04053bda0a88bda5177b86a15c3b29f559873"));
 
             Console.WriteLine("Cash Address: " + encoded);
+
+
+            // let's try decoding a raw transaction!
+            var txHex =
+                "020000000113b15104613103365466d9c1773a2c60c3dec7ab6ea41f7f2824f6b00556bd98370000006b483045022100bda8b53dcffbcbf3c005b7c55a923cd04eb3d3abd7632dd260f97d15cc2982ed02202dc15d4a9ad826f4b3a0781693050fe8c1cdeb919903ba11385f0b5e83c1ea5641210384dd3ad997f2e10980e755236b474f986c519599946027876cdeb4eb5a30a09fffffffff0110270000000000001976a91476a04053bda0a88bda5177b86a15c3b29f55987388ac00000000";
+
+            var tx = new Transaction(ByteHexConverter.StringToByteArray(txHex));
+            Console.WriteLine("Decoded transaction. TXID: " + tx.TXIDHex + ". Inputs: " + tx.Inputs.Length + ". Outputs: " + tx.Outputs.Length+ ". Output Scripts:");
+            foreach (var output in tx.Outputs)
+                Console.WriteLine(output);
+
+
+                              //"d01babce88a9b3d25a14f46ea4432894965106675c54314867e1cf263dae03eb);
 
             // wait
             Console.ReadKey();

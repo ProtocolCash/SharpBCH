@@ -21,32 +21,31 @@
  *
  */
 
-using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace SharpBCH
+namespace SharpBCH.Transaction
 {
     /// <summary>
-    ///     Cash Address script type version numbers (only 2 so far)
+    ///     Represents a Bitcoin Transaction Input
     /// </summary>
-    public enum ScriptType
+    public class Input
     {
-        P2PKH = 0x0,
-        P2SH = 0x8,
-        // internal identifiers
-        DATA = -1,
-        OTHER = -2
-            
-    }
+        // hash of the transaction that created the UTXO being used
+        public byte[] Hash;
+        // index of the output in the previous transaction
+        public uint Index;
+        // storage of the output script
+        private Script.Script _script;
+        // public getter/setter for the output script
+        public byte[] Script
+        {
+            get => _script.ScriptBytes;
+            set => _script = new Script.Script(value);
+        }
 
-    /// <summary>
-    ///     Cash Address network prefixes
-    /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public enum AddressPrefix
-    {
-        bitcoincash,
-        bchtest,
-        bchreg
+        // sequence number
+        // - at least one input must have a non-max sequence number,
+        //   otherwise transaction lock_time is ignored
+        public uint Sequence;
+        // the witness data for a segwit spend
+        public byte[] Witness = new byte[0];
     }
 }

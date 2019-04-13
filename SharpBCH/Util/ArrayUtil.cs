@@ -22,31 +22,32 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 
-namespace SharpBCH
+namespace SharpBCH.Util
 {
     /// <summary>
-    ///     Cash Address script type version numbers (only 2 so far)
+    ///     Utility class for arrays
     /// </summary>
-    public enum ScriptType
+    public class ArrayUtil
     {
-        P2PKH = 0x0,
-        P2SH = 0x8,
-        // internal identifiers
-        DATA = -1,
-        OTHER = -2
-            
-    }
+        public static T[] ConcatArrays<T>(T[] arr1, T[] arr2)
+        {
+            var result = new T[arr1.Length + arr2.Length];
+            Buffer.BlockCopy(arr1, 0, result, 0, arr1.Length);
+            Buffer.BlockCopy(arr2, 0, result, arr1.Length, arr2.Length);
+            return result;
+        }
 
-    /// <summary>
-    ///     Cash Address network prefixes
-    /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public enum AddressPrefix
-    {
-        bitcoincash,
-        bchtest,
-        bchreg
+        public static T[] SubArray<T>(T[] arr, int start, int length)
+        {
+            var result = new T[length];
+            Buffer.BlockCopy(arr, start, result, 0, length);
+            return result;
+        }
+
+        public static T[] SubArray<T>(T[] arr, int start)
+        {
+            return SubArray(arr, start, arr.Length - start);
+        }
     }
 }
