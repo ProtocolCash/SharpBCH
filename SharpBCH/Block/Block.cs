@@ -45,7 +45,7 @@ namespace SharpBCH.Block
     /// <summary>
     ///     Represents and decodes a full bitcoin block
     /// </summary>
-    class Block : Serializer
+    public class Block : Serializer
     {
         public BlockHeader Header { get; private set; }
         public Transaction.Transaction[] Transactions { get; private set; }

@@ -102,7 +102,7 @@ namespace SharpBCH.Script
             for (var i = 0; i < ScriptBytes.Length; i++)
             {
                 // OP_PUSH - indicates a data section of ScriptBytes[i] length
-                if (ScriptBytes[i] > 1 && ScriptBytes[i] < 76)
+                if (ScriptBytes[i] > 0 && ScriptBytes[i] < 76)
                 {
                     // save the data chunk and add an OP_DATA code to the script
                     var dataLength = ScriptBytes[i];
