@@ -6,15 +6,38 @@ Implements Block and Transaction Decoding; Cash Address and Bitcoin Script encod
 
 ## Early Development Warning
 
-Changes may occur rapid. Additional functionality will be addied. Reasonable effort will be made to keep public functions and constructors consistent in required arguments and return values; however, at this stage this is not guaranteed!
+Rapid changes may occur. Additional functionality will be added. Reasonable effort will be made to keep public functions and constructors consistent in required arguments and return values; however, at this stage this is not guaranteed!
+
+## Development Environment and Tools
+SharpBCH can be built under any DotNET Core 2.2 environment.
+
+Recommended Development Environment:
+- Visual Studio 2017 Community Edition https://visualstudio.microsoft.com/downloads/
+- JetBrains Resharper https://www.jetbrains.com/resharper/
+- DotNET Core 2.2 https://dotnet.microsoft.com/download/dotnet-core/2.2
+
+## Dependencies
+SharpBCH (https://github.com/ProtocolCash/SharpBCH) aims to keep the dependency tree minimal - as much as is reasonable is implemented directly in the library.
+
+SharpBCH depends on:
+- NETCore 2.2.0
+- NetMQ 4.0.0.1 
+- - https://www.nuget.org/packages/NetMQ/4.0.0.1 
+- - https://github.com/zeromq/netmq
+- Newtonsoft.Json 12.0.1 
+- - https://www.nuget.org/packages/Newtonsoft.Json/ 
+- - https://github.com/JamesNK/Newtonsoft.Json
 
 # Getting Started
 
-You can pull in SharpBCH to your project for any number of reasons.
+You may want to use SharpBCH in your project to:
+- Decode Bitcoin Blocks and Transacitons
+- Encode and Decode Bitcoin Scripts and Cash Address
+- Interact to a node for blocks, transactions, or other information
 
-Presuming you already have a node, there isn't even any sync time required! Edit bitcoin.conf to include zmqpubrawtx and zmqpubrawblock, setup BCHSocket's app.config to match, then just start BCHSocket!
+Below are the public interfaces and types with which you should be familiar.
 
-## New Types
+## Special Return and Input Types
 
 A few enums and output classes/interfaces:
 
@@ -81,24 +104,3 @@ Namespace: SharpBCH.Block
 ## Node Connections
 Namespace: SharpBCH.Node
 - Docs TODO
-
-## Development Environment and Tools
-SharpBCH can be built under any DotNET Core 2.2 environment.
-
-Recommended Development Environment:
-- Visual Studio 2017 Community Edition https://visualstudio.microsoft.com/downloads/
-- JetBrains Resharper https://www.jetbrains.com/resharper/
-- DotNET Core 2.2 https://dotnet.microsoft.com/download/dotnet-core/2.2
-
-## Dependencies
-
-SharpBCH (https://github.com/ProtocolCash/SharpBCH) aims to keep the dependency tree minimal - as much as is reasonable is implemented directly in the library.
-
-SharpBCH depends on:
-- NETCore 2.2.0
-- NetMQ 4.0.0.1 
-- - https://www.nuget.org/packages/NetMQ/4.0.0.1 
-- - https://github.com/zeromq/netmq
-- Newtonsoft.Json 12.0.1 
-- - https://www.nuget.org/packages/Newtonsoft.Json/ 
-- - https://github.com/JamesNK/Newtonsoft.Json
