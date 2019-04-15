@@ -21,6 +21,7 @@
  *
  */
 
+using System.Linq;
 using SharpBCH.Script;
 using SharpBCH.Util;
 
@@ -116,6 +117,30 @@ namespace SharpBCH.Transaction
                 default:
                     return ScriptType.OTHER;
             }
+        }
+
+        /// <summary>
+        ///     Returns the hash160 encoded data from a P2PKH or P2SH output
+        /// </summary>
+        /// <returns></returns>
+        public byte[] GetHash160()
+        {
+            if (Type == ScriptType.P2PKH || Type == ScriptType.P2SH)
+                return _script.DataChunks[0];
+            return new byte[0];
+        }
+
+        /// <summary>
+        ///     Returns the given number of bytes of op_return data from a P2PKH or P2SH output
+        /// </summary>
+        /// <returns></returns>
+        public byte[] GetOpReturnData(int maxBytes)
+        {
+            if (Type != ScriptType.DATA)
+                return new byte[0];
+
+            return _script.DataChunks[0].Length <= maxBytes ? _script.DataChunks[0] :
+                _script.DataChunks[0].SkipLast(maxBytes - _script.DataChunks[0].Length).ToArray();
         }
     }
 }
