@@ -17,6 +17,7 @@ namespace SharpBCH.Script
         // push value
         OP_0 = 0x00,
         OP_FALSE = OP_0,
+        // op_push 0x01-0x4b = op_push <val>
         OP_PUSHDATA1 = 0x4c,
         OP_PUSHDATA2 = 0x4d,
         OP_PUSHDATA4 = 0x4e,
@@ -162,6 +163,8 @@ namespace SharpBCH.Script
         OP_PUBKEYHASH = 0xfd,
         OP_PUBKEY = 0xfe,
 
+        // internal
+        OP_UNKNOWN = 0xfd,
         OP_INVALIDOPCODE = 0xff,
     };
 }

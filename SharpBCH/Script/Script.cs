@@ -152,7 +152,8 @@ namespace SharpBCH.Script
                                     OpCodes.Add((OpCodeType)ScriptBytes[i]);
                                 else
                                 {
-                                    throw new ArgumentException("Invalid op_code encountered at byte " + i + ": " + (int) ScriptBytes[i]);
+                                    // throw new ArgumentException("Invalid op_code encountered at byte " + i + ": " + (int) ScriptBytes[i]);
+                                    OpCodes.Add(OpCodeType.OP_UNKNOWN);
                                 }
                                 break;
                             }
