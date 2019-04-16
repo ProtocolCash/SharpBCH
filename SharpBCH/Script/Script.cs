@@ -79,7 +79,7 @@ namespace SharpBCH.Script
             // create the op_code and data storage
             OpCodes = new List<OpCodeType>();
             DataChunks = new List<byte[]>();
-
+            
             try
             {
                 // populate op_codes and retrieve data sections from the script

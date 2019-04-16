@@ -28,9 +28,9 @@ namespace SharpBCH.Transaction
     /// </summary>
     public class Input
     {
-        // hash of the transaction that created the UTXO being used
+        // hash of the transaction that created the output being redeemed
         public byte[] Hash;
-        // index of the output in the previous transaction
+        // index of the output for redeemed UTXO in the previous transaction
         public uint Index;
         // storage of the output script
         private Script.Script _script;
@@ -45,7 +45,5 @@ namespace SharpBCH.Transaction
         // - at least one input must have a non-max sequence number,
         //   otherwise transaction lock_time is ignored
         public uint Sequence;
-        // the witness data for a segwit spend
-        public byte[] Witness = new byte[0];
     }
 }
