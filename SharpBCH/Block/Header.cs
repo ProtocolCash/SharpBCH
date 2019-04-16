@@ -42,19 +42,10 @@ namespace SharpBCH.Block
         public uint TimeStamp { get; private set; }
         public uint DiffTarget { get; private set; }
         public uint Nonce { get; private set; }
+        // double sha of header in hex
         public string BlockHashHex { get; private set; }
 
         public bool LengthMatch { get; private set; }
-
-        /// <inheritdoc />
-        /// <summary>
-        ///     Constructor
-        ///     - creates an empty block header object
-        ///     - used for LiteDB queries
-        /// </summary>
-        public BlockHeader() : base(new List<byte>())
-        {
-        }
 
         /// <inheritdoc />
         /// <summary>
