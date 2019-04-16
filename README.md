@@ -1,3 +1,4 @@
+
 # SharpBCH
 
 DotNET Core Bitcoin BCH C# Library!
@@ -20,7 +21,7 @@ Recommended Development Environment:
 SharpBCH (https://github.com/ProtocolCash/SharpBCH) aims to keep the dependency tree minimal - as much as is reasonable is implemented directly in the library.
 
 SharpBCH depends on:
-- NETCore 2.2.0
+- DotNET Core 2.2.0
 - NetMQ 4.0.0.1 
 - - https://www.nuget.org/packages/NetMQ/4.0.0.1 
 - - https://github.com/zeromq/netmq
@@ -32,10 +33,16 @@ SharpBCH depends on:
 
 You may want to use SharpBCH in your project to:
 - Decode Bitcoin Blocks and Transacitons
-- Encode and Decode Bitcoin Scripts and Cash Address
-- Interact to a node for blocks, transactions, or other information
+- Encode and Decode Bitcoin Scripts and Cash Addresses
+- Interact with a node for full blocks or specific transactions
 
-Below are the public interfaces and types with which you should be familiar.
+Public interface index:
+
+[CashAddress](#cashaddress-encoding-and-decoding)
+[Bitcoin Script](#bitcoin-script-encoding-and-decoding)
+[Transaction](#transaction-decoding)
+[Block](#block-decoding)
+[Node](#node-connections)
 
 ## Special Return and Input Types
 
@@ -95,12 +102,64 @@ Namespace: SharpBCH.Script
 
 ## Transaction Decoding
 Namespace: SharpBCH.Transaction
-- Docs TODO
+- Transaction (Constructable Class):
+	- Transaction(IEnumerable\<byte\> txBytes)
+		- txBytes: raw transaction as byte array
+	- Inputs
+		- (Input[]) all inputs in the transaction
+	- Outputs
+		- (Output[]) all outputs in the transaction
+	- TXIDHex
+		- (string) transaction ID in hex
+	- TXVersion
+		- (uint) transaction version number
+	- LockTime
+		- (uint) block locktime
+- Input (Constructable Class):
+	- Hash
+		- (byte[]) hash of the transaction that created the output being redeemed 
+	- Index
+		- (uint) index of output for redeemed utxo in the previous transaction
+	- Script
+		- (byte[]) raw input script
+- Output (Constructable Class):
+	- Value
+		- (ulong) value spent to the output
+	- Type
+		- (ScriptType) type of output, if known (or -2 for unknown)
+	- Address
+		- (string) cash address to which the output spends (or empty if Type is not P2PKH or P2SH)
+	- Script
+		- (byte[]) raw output script
 
 ## Block Decoding
 Namespace: SharpBCH.Block
-- Docs TODO
-
+- Block (Constructable Class):
+	- public BlockHeader(IEnumerable<\byte\> headerBytes) : base(headerBytes):
+		- 	- 
+	- Block(IEnumerable\<byte\> blockBytes)
+		- blockBytes: >raw block of block as byte array
+	- Header
+		- (BlockHeader) See Below
+	- Transactions
+		- (Transaction[]) See Above
+	- BlockSize
+		- (uint) size of block in bytes
+	- BlockHash
+		- (string) blockhash in hex
+- BlockHeader (Constructable Class):
+	- BlockHeader(IEnumerable<\byte\> headerBytes)
+		- headerBytes: raw block header as byte array
+	- BlockVersion (uint)
+	- PrevBlockHash (string)
+	- MerkleRootHash (byte[])
+	- TimeStamp (uint)
+	- DiffTarget (uint)
+	- Nonce (uint)
+	- BlockHashHex:
+		- (string) double sha of header in hex
+- BlockException
+	-  Public functions of this namespace throw on errors. See InternalException for failure reason.
 ## Node Connections
 Namespace: SharpBCH.Node
-- Docs TODO
+- TODO
