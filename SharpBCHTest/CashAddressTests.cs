@@ -34,7 +34,7 @@ namespace SharpBCHTest
             };
 
         [TestMethod]
-        public void CashAddressTest1()
+        public void CashAddressDecodeTest()
         {
             foreach (var testCase in _cashAddressTestCases)
             {
@@ -50,7 +50,7 @@ namespace SharpBCHTest
         }
 
         [TestMethod]
-        public void CashAddressTest2()
+        public void CashAddressEncodeTest()
         {
             foreach (var testCase in _cashAddressTestCases)
             {
@@ -60,6 +60,16 @@ namespace SharpBCHTest
                 var encoded = CashAddress.EncodeCashAddress(Enum.Parse<AddressPrefix>(testCase.Value.Prefix), testCase.Value.Type, testCase.Value.Hash);
                 // ensure cash address output is correct
                 Assert.AreEqual(encoded, testCase.Key);
+            }
+        }
+
+        [TestMethod]
+        public void CashAddressChecksumValidationTest()
+        {
+            foreach (var (address, decoded) in _cashAddressTestCases)
+            {
+                // ensure correct checksum validates
+                Assert.IsTrue(CashAddress.ValidateChecksum(address, decoded));
             }
         }
     }
