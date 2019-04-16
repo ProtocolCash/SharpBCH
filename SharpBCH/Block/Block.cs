@@ -58,9 +58,19 @@ namespace SharpBCH.Block
         /// <inheritdoc />
         /// <summary>
         ///     Constructor
+        ///     - creates an empty block object
+        ///     - used for LiteDB queries
+        /// </summary>
+        public Block() : base(new List<byte>())
+        {
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        ///     Constructor
         ///     - decodes the block data
         /// </summary>
-        /// <param name="blockBytes">raw block of block as byte array</param>
+        /// <param name="blockBytes">raw block as byte array</param>
         public Block(IEnumerable<byte> blockBytes) : base(blockBytes)
         {
             try

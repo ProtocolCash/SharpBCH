@@ -51,7 +51,7 @@ namespace SharpBCH.CashAddress
         /// </summary>
         /// <param name="prefix">Cash Address prefix</param>
         /// <param name="scriptType">Bitcoin script type</param>
-        /// <param name="hash160">Byte data from bitcoin script (usually hash160)</param>
+        /// <param name="hash160">Cash Address formatted address</param>
         /// <returns>cash address formatted bitcoin address</returns>
         public static string EncodeCashAddress(AddressPrefix prefix, ScriptType scriptType, byte[] hash160)
         {
@@ -86,7 +86,7 @@ namespace SharpBCH.CashAddress
         ///     Decodes a CashAddress into prefix, type, and hash160
         /// </summary>
         /// <param name="address">Cash Address formatted address</param>
-        /// <returns>prefix, type, hash160 bytes</returns>
+        /// <returns></returns>
         public static DecodedBitcoinAddress DecodeCashAddress(string address)
         {
             try
@@ -137,7 +137,7 @@ namespace SharpBCH.CashAddress
         ///     Decodes a CashAddress into prefix, type, and hash160
         /// </summary>
         /// <param name="address">Cash Address formatted address</param>
-        /// <returns>prefix, type, hash160 bytes</returns>
+        /// <returns></returns>
         private static DecodedBitcoinAddress Decode(string address)
         {
             // split at the separator colon; format address in lower case
