@@ -100,14 +100,39 @@ namespace SharpBCH.CashAddress
                     throw new ArgumentException("Invalid Prefix. Expected: " + string.Join(", ",
                                                     Enum.GetValues(typeof(AddressPrefix))).Cast<AddressPrefix>() + ".");
 
-                // TODO: validate checksum
+                // do the decode
+                var decoded = Decode(address);
 
-                return Decode(address);
+                // validate checksum
+                if (!ValidateChecksum(address, decoded))
+                    throw new ArgumentException("Cash address is invalid - checksum does not match.");
+
+                return decoded;
             }
             catch (Exception e)
             {
                 throw new CashAddressException("Error decoding cash address.", e);
             }
+        }
+
+        /// <summary>
+        ///     Checks is a given cash address has correct checksum
+        /// </summary>
+        /// <param name="address">cash address to validate</param>
+        /// <param name="decoded">decoded address matching the cashAddress</param>
+        /// <returns>true if checksum is valid, false otherwise</returns>
+        public static bool ValidateChecksum(string address, DecodedBitcoinAddress decoded)
+        {
+            // split at the separator colon; format address in lower case
+            var pieces = address.ToLower().Split(':');
+            // trim the prefix (should be "bitcoincash", "bchtest", or "bchreg") - the first chunk separated by colon
+            var prefix = pieces[0];
+            // base32 decode the payload (second chunk)
+            var payload = Base32Util.Decode(pieces[1]);
+            // get start value for polymod
+            var startValue = GetPolyModStartValue(prefix);
+            // polymod on payload including checksum should be 0
+            return PolyMod(payload, startValue) == 0;
         }
 
         // Used by polymod checksum generation
@@ -183,7 +208,7 @@ namespace SharpBCH.CashAddress
             // calculate the version byte - in bits, 0 reserved, 1-4 address type, 4-7 size of hash
             var versionByte = scriptType + GetHashSizeBits(hash);
             // convert byte array from 8bits to 5, append prefix 0 bit and version byte
-            var base5 = ConvertBits(new byte[1] { (byte)versionByte }.Concat(hash).ToArray(), 8, 5);
+            var base5 = ConvertBits(new[] { (byte)versionByte }.Concat(hash).ToArray(), 8, 5);
             // generate checksum from base5 array
             var checksumBytes = CreateChecksum(base5, header);
             // append the checksum to the base5 array
@@ -211,19 +236,11 @@ namespace SharpBCH.CashAddress
         }
 
         /// <summary>
-        ///     Creates the 40 bits BCH checksum for a cash address
+        ///     Returns pre-calculated polymod start value for a given header
         /// </summary>
-        /// <param name="data">
-        ///     base5 byte array of:
-        ///     - The lower 5 bits of each character of the prefix. - e.g. “bit…” becomes 2,9,20,…
-        ///     - A zero for the separator (5 zero bits).
-        ///     - The payload by chunks of 5 bits. If necessary, the payload is padded to the right
-        ///       with zero bits to complete any unfinished chunk at the end.
-        ///     - Eight zeros as a “template” for the checksum.
-        /// </param>
-        /// <param name="header">is a mainnet transaciton</param>
-        /// <returns>cash address checksum bytes</returns>
-        private static IEnumerable<byte> CreateChecksum(IEnumerable<byte> data, string header)
+        /// <param name="header"></param>
+        /// <returns></returns>
+        private static ulong GetPolyModStartValue(string header)
         {
             // start values calculated with https://play.golang.org/p/o4-mMftR44D
             ulong startValue;
@@ -242,6 +259,25 @@ namespace SharpBCH.CashAddress
                     throw new ArgumentException("Invalid header/prefix.");
             }
 
+            return startValue;
+        }
+
+        /// <summary>
+        ///     Creates the 40 bits BCH checksum for a cash address
+        /// </summary>
+        /// <param name="data">
+        ///     base5 byte array of:
+        ///     - The lower 5 bits of each character of the prefix. - e.g. “bit…” becomes 2,9,20,…
+        ///     - A zero for the separator (5 zero bits).
+        ///     - The payload by chunks of 5 bits. If necessary, the payload is padded to the right
+        ///       with zero bits to complete any unfinished chunk at the end.
+        ///     - Eight zeros as a “template” for the checksum.
+        /// </param>
+        /// <param name="header">is a mainnet transaciton</param>
+        /// <returns>cash address checksum bytes</returns>
+        private static IEnumerable<byte> CreateChecksum(IEnumerable<byte> data, string header)
+        {
+            var startValue = GetPolyModStartValue(header);
             // calculate polymod from known header startValue
             var checksum = PolyMod(data.Concat(new byte[8]).ToArray(), startValue);
 
