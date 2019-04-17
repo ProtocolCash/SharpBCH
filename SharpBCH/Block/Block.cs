@@ -23,8 +23,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SharpBCH.Bitcoin;
 using SharpBCH.Transaction;
+using SharpBCH.Util;
 
 namespace SharpBCH.Block
 {        
@@ -66,6 +68,14 @@ namespace SharpBCH.Block
             try
             {
                 Decode();
+
+                // Validate merkleroot
+                var tx = Transactions.Select(transaction => transaction.TXIDHex).ToArray();
+                var calculatedRoot = ByteHexConverter.ByteArrayToHex(Header.MerkleRootHash.Reverse().ToArray()).ToLower();
+                var blockRoot = MerkleTree.BuildMerkleRoot(tx);
+                if (blockRoot != calculatedRoot)
+                    throw new ArgumentException("MerkleRoot is invalid! Calculated MerkleRoot: " + calculatedRoot +
+                                                ". Block MerkleRoot: " + blockRoot);
             }
             catch (Exception e)
             {
