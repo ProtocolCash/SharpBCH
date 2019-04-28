@@ -91,6 +91,10 @@ namespace SharpBCH.Block
             // strict validation - we should be at the end of the header
             LengthMatch = Offset == ByteData.Length;
 
+            // don't store the extra data; useful when serializing multiple block headers
+            if (!LengthMatch)
+                ByteData = ByteData.Take(Offset).ToArray();
+
             // block hash = sha256(sha256(header_data)) -> reverse byte data -> convert to hex
             SHA256 sha256 = new SHA256Managed();
             BlockHashHex = ByteHexConverter.ByteArrayToHex(sha256.ComputeHash(sha256.ComputeHash(ByteData)).Reverse().ToArray());

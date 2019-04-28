@@ -22,7 +22,11 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SharpBCH.Block;
 using SharpBCH.Util;
 
 namespace SharpBCH.Node
@@ -39,85 +43,68 @@ namespace SharpBCH.Node
         /// <param name="port">Port to the REST interface e.g. 8332</param>
         public RESTClient(string hostname, int port)
         {
-            _connectTo = new UriBuilder("http", hostname, port, "rest").Uri;
-        }
-        
-        /// <summary>
-        ///     Gets raw transaction data for a given txid
-        /// </summary>
-        /// <param name="txid">transaction id in hex</param>
-        /// <returns>raw transaction byte data</returns>
-        public byte[] GetRawTransaction(string txid)
-        {
-            var ret = SendCommand("tx/" + txid + ".hex");
-            var transactionHex = ret.GetValue("result").ToObject<string>();
-            return ByteHexConverter.StringToByteArray(transactionHex);
+            _connectTo = new UriBuilder("http", hostname, port, "rest/").Uri;
         }
 
         /// <summary>
-        ///     Gets raw block data at the given height
+        ///     Gets and decodes block data
         /// </summary>
-        /// <returns>raw block data as hex</returns>
-        public string GetRawBlock(string blockHash)
+        /// <returns>decoded block</returns>
+        public Block.Block GetBlockByHash(string blockHash)
         {
-            var ret = SendCommand("block/" + blockHash + ".hex");
-            var result = ret.GetValue("result");
-            return result.Value<string>();
+            var ret = SendCommand("block/" + blockHash + ".hex").Trim();
+            return WrapDecodeException(() => new Block.Block(ByteHexConverter.StringToByteArray(ret)));
         }
 
         /// <summary>
         ///     Gets raw block headers starting from a given block hash
         /// </summary>
         /// <returns>raw block data as hex</returns>
-        public string[] GetBlockHeadersStartingAt(string blockHash, int count)
+        public IEnumerable<BlockHeader> GetBlockHeadersStartingAt(string blockHash, int count)
         {
             var ret = SendCommand("headers/" + count + "/" + blockHash + ".hex");
-            var result = ret.GetValue("result");
-            return result.Value<string[]>();
-        }
 
-        /// <summary>
-        ///     Gets the block hash at a given height
-        /// </summary>
-        /// <returns>block hash in hex</returns>
-        public string GetBlockHash(int height)
-        {
-            var ret = SendCommand("blockhashbyheight/" + height + ".hex");
-            var result = ret.GetValue("result");
-            return result.Value<string>();
+            var headerBytes = WrapDecodeException(() => ByteHexConverter.StringToByteArray(ret.Trim()));
+
+            // decode headers (80 bytes each)
+            for (var headerStart = 0; headerStart < headerBytes.Length; headerStart += 80)
+                yield return new BlockHeader(headerBytes.Skip(headerStart).Take(80));
         }
 
         /// <summary>
         ///     Gets the height of a given block
         /// </summary>
         /// <returns>block height</returns>
-        public int GetBlockHeight(string blockHash)
+        public int GetBlockHeightByHash(string blockHash)
         {
-            var ret = SendCommand("notxdetails/" + blockHash + ".json");
+            var ret = SendCommand("block/notxdetails/" + blockHash + ".json");
             // TODO: get just the height out of the json return
-            var result = ret.GetValue("result");
-            return result.Value<int>("height");
+            var result = WrapDecodeException(() => JObject.Parse(ret).GetValue("height"));
+            return WrapDecodeException(() => result.Value<int>());
         }
 
         /// <summary>
         ///     Gets the current block height
         /// </summary>
         /// <returns>block height</returns>
-        public JObject GetChainInfo()
+        public ChainInfo GetChainInfo()
         {
             var ret = SendCommand("chaininfo.json");
-            var result = ret.GetValue("result");
-            return result.Value<JObject>();
+            var ret2 = WrapDecodeException(() => JsonConvert.DeserializeObject<ChainInfo>(ret));
+            return ret2;
         }
 
         /// <summary>
         ///     Gets all transaction ids in the mem pool
         /// </summary>
         /// <returns>array of txid in hex</returns>
-        public JObject GetMemPool()
+        public Dictionary<string, MemPoolTxInfo> GetMemPool()
         {
             var ret = SendCommand("mempool/contents.json");
-            return ret.GetValue("result").ToObject<JObject>();
+            var jObject = WrapDecodeException(() => JObject.Parse(ret));
+
+            return WrapDecodeException(() => jObject.Properties().ToDictionary(property => property.Name, 
+                property => property.Value.ToObject<MemPoolTxInfo>()));
         }
 
         /// <summary>
@@ -126,13 +113,44 @@ namespace SharpBCH.Node
         ///     - bytes : (numeric) size of the TX mempool in bytes
         ///     - usage : (numeric) total TX mempool memory usage
         ///     - maxmempool : (numeric) maximum memory usage for the mempool in bytes
-        ///     - mempoolminfee : (numeric) minimum feerate(BTC per KB) for tx to be accepted
+        ///     - mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
         /// </summary>
         /// <returns>array of txid in hex</returns>
-        public JObject GetMemPoolInfo()
+        public MemPoolInfo GetMemPoolInfo()
         {
             var ret = SendCommand("mempool/info.json");
-            return ret.GetValue("result").ToObject<JObject>();
+            return WrapDecodeException(() => JsonConvert.DeserializeObject<MemPoolInfo>(ret));
+        }
+
+        /// <summary>
+        ///     Gets raw block data at the given height
+        /// </summary>
+        /// <returns>raw block data as hex</returns>
+        public string GetRawBlockByHash(string blockHash)
+        {
+            return SendCommand("block/" + blockHash + ".hex").Trim();
+        }
+
+        /// <summary>
+        ///     Gets raw transaction data for a given txid
+        /// </summary>
+        /// <param name="txid">transaction id in hex</param>
+        /// <returns>raw transaction data as hex</returns>
+        public string GetRawTransactionById(string txid)
+        {
+            return SendCommand("tx/" + txid + ".hex").Trim();
+        }
+
+        /// <summary>
+        ///     Gets and decodes the transaction data for a given txid
+        /// </summary>
+        /// <param name="txid">transaction id in hex</param>
+        /// <returns>decoded transaction</returns>
+        public Transaction.Transaction GetTransactionById(string txid)
+        {
+            var ret = SendCommand("tx/" + txid + ".hex").Trim();
+
+            return WrapDecodeException(() => new Transaction.Transaction(ByteHexConverter.StringToByteArray(ret)));
         }
 
         /// <summary>
@@ -140,16 +158,119 @@ namespace SharpBCH.Node
         /// </summary>
         /// <param name="method">method to call</param>
         /// <returns></returns>
-        private JObject SendCommand(string method)
+        private string SendCommand(string method)
         {
-            // generate the request uri from base uri and method
-            var uriBuilder = new UriBuilder(_connectTo);
-            uriBuilder.Path += method;
+            return WrapSendException(() =>
+            {
+                // generate the request uri from base uri and method
+                var uriBuilder = new UriBuilder(_connectTo);
+                uriBuilder.Path += method;
 
-            // TODO: error handling
-            var ret = SimpleWebRequest(uriBuilder.Uri);
-            return new JObject(ret);
+                // TODO: error handling?
+                return SimpleWebRequest(uriBuilder.Uri);
+            });
         }
 
+        /// <summary>
+        ///     Helper function to catch exceptions and wrap them with a RESTException for Decoding Errors
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        private static T WrapDecodeException<T>(Func<T> func)
+        {
+            try
+            {
+                return func.Invoke();
+            }
+            catch (Exception e)
+            {
+                throw new RESTException("Failed to Decode Response", e);
+            }
+        }
+
+        /// <summary>
+        ///     Helper function to catch exceptions and wrap them with a RESTException for Send/Receive Errors
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        private static string WrapSendException(Func<string> func)
+        {
+            try
+            {
+                return func.Invoke();
+            }
+            catch (Exception e)
+            {
+                throw new RESTException("REST Request Failed", e);
+            }
+        }
+
+        public class RESTException : Exception
+        {
+            public RESTException(string message, Exception innerException) : base(message, innerException)
+            {
+            }
+        }
+
+        [JsonObject]
+        public class ChainInfo
+        {
+            [JsonProperty("chain")] public string Chain { get; set; }
+            [JsonProperty("blocks")] public ulong Blocks { get; set; }
+            [JsonProperty("headers")] public string Headers { get; set; }
+            [JsonProperty("bestblockhash")] public string BestBlockHash { get; set; }
+            [JsonProperty("difficulty")] public double Difficulty { get; set; }
+            [JsonProperty("mediantime")] public ulong MedianTime { get; set; }
+            [JsonProperty("verificationprogress")] public double VerificationProgress { get; set; }
+            [JsonProperty("chainwork")] public string ChainWork { get; set; }
+            [JsonProperty("size_on_disk")] public ulong SizeOnDisk { get; set; }
+            [JsonProperty("pruned")] public bool Pruned { get; set; }
+            [JsonProperty("softforks")] public SoftForkInfo[] SoftForks { get; set; }
+            [JsonProperty("warnings")] public string Warnings { get; set; }
+
+            public class SoftForkInfo
+            {
+                [JsonProperty("id")] public string Id { get; set; }
+                [JsonProperty("version")] public string Version { get; set; }
+                [JsonProperty("reject")] private RejectInfo Reject { get; set; }
+
+                public bool RejectStatus => Reject.Status;
+
+                public class RejectInfo
+                {
+                    [JsonProperty("status")] public bool Status { get; set; }
+                }
+            }
+        }
+
+        [JsonObject]
+        public class MemPoolInfo
+        {
+            [JsonProperty("bytes")] public ulong Bytes;
+            [JsonProperty("maxmempool")] public ulong MaxMemPool;
+            [JsonProperty("mempoolminfee")] public double MemPoolMinFee;
+            [JsonProperty("size")] public uint Size;
+            [JsonProperty("usage")] public ulong Usage;
+        }
+
+        [JsonObject]
+        public class MemPoolTxInfo
+        {
+            [JsonProperty("size")] public uint Size;
+            [JsonProperty("fee")] public double Fee;
+            [JsonProperty("modifiedfee")] public double ModifiedFee;
+            [JsonProperty("time")] public ulong Time;
+            [JsonProperty("height")] public ulong Height;
+            [JsonProperty("startingpriority")] public double StartingPriority;
+            [JsonProperty("currentpriority")] public double CurrentPriority;
+            [JsonProperty("descendantcount")] public uint DescendantCount;
+            [JsonProperty("descendantsize")] public uint DescendantSize;
+            [JsonProperty("descendantfees")] public ulong DescendantFees;
+            [JsonProperty("ancestorcount")] public uint AncestorCount;
+            [JsonProperty("ancestorsize")] public uint AncestorSize;
+            [JsonProperty("ancestorfees")] public ulong AncestorFees;
+            [JsonProperty("depends")] public string[] Depends;
+        }
     }
 }

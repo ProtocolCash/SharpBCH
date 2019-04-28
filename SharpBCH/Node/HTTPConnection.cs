@@ -34,7 +34,7 @@ namespace SharpBCH.Node
     /// </summary>
     public abstract class HTTPConnection : NodeConnection
     {
-        public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(45);
+        public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(15);
 
         /// <summary>
         ///     Constructor
