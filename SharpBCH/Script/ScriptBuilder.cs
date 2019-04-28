@@ -99,7 +99,7 @@ namespace SharpBCH.Script
                     // P2SH is OP_HASH160 <hash160> OP_EQUAL
                     case ScriptType.P2SH:
                         script.Add((byte)OpCodeType.OP_HASH160);
-                        script = script.Concat(GetOpPushForLength((uint)hash160.Length)).ToList();
+                        script = script.Concat(GetOpPushForLength((uint) hash160.Length)).ToList();
                         script = script.Concat(hash160).ToList();
                         script.Add((byte)OpCodeType.OP_EQUAL);
                         break;
@@ -130,10 +130,7 @@ namespace SharpBCH.Script
             try
             {
                 // An OP_RETURN is simply OP_RETURN <data>
-                var script = new List<byte>
-                    { (byte) OpCodeType.OP_RETURN };
-                script = script.Concat(GetOpPushForLength((uint)data.Length)).ToList();
-                script = script.Concat(data).ToList();
+                var script = new List<byte>{ (byte) OpCodeType.OP_RETURN }.Concat(data);
 
                 // build the script and return
                 return new Script(script);
@@ -149,10 +146,13 @@ namespace SharpBCH.Script
         ///     Gets the OP_CODE(s) needed to push data of a given length
         /// </summary>
         /// <param name="dataLength">length of data to push to script stack</param>
+        /// <param name="allowOpZero">Use OP_0 for pushing 0 length if true, otherwise uses PUSHDATA1 for length 0</param>
         /// <returns>Opcode bytes</returns>
-        public static byte[] GetOpPushForLength(uint dataLength)
+        public static byte[] GetOpPushForLength(ulong dataLength, bool allowOpZero = true)
         {
-            if (dataLength == 0)
+            if (dataLength == 0 && !allowOpZero)
+                return new[] { (byte)OpCodeType.OP_PUSHDATA1, (byte)dataLength };
+            if (dataLength == 0 && allowOpZero)
                 return new byte[0];
             // Opcode 1-75 indicate a data push of that length
             if (dataLength > 1 && dataLength < 76)
@@ -163,10 +163,9 @@ namespace SharpBCH.Script
             // 2 byte pushdata
             if (dataLength < 255 * 255)
                 return new[] { (byte)OpCodeType.OP_PUSHDATA2, (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
-
             // 4 byte pushdata
             return new[] { (byte)OpCodeType.OP_PUSHDATA4, (byte)((dataLength & 0xFF000000) >> 24),
-                (byte)((dataLength & 0x00FF0000) >> 16), (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
+            (byte)((dataLength & 0x00FF0000) >> 16), (byte)((dataLength & 0xFF00) >> 8), (byte)(dataLength & 0x00FF) };
             
         }
     }
