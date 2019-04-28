@@ -21,6 +21,7 @@
  *
  */
 
+using System.Linq;
 using SharpBCH.Util;
 
 namespace SharpBCH.Transaction
@@ -36,11 +37,18 @@ namespace SharpBCH.Transaction
         public byte[] Hash;
 
         /// <summary>
+        /// hex of the hash for the transaction that created the output being redeemed
+        /// </summary>
+        public string HashHex => ByteHexConverter.ByteArrayToHex(Hash.Reverse().ToArray());
+
+        /// <summary>
         /// index of the output for redeemed UTXO in the previous transaction
         /// </summary>
         public uint Index;
 
-
+        /// <summary>
+        /// raw script in hex
+        /// </summary>
         public string ScriptHex => _script.ScriptBytes.Length > 0 ? ByteHexConverter.ByteArrayToHex(_script.ScriptBytes) : null;
 
         /// <summary>

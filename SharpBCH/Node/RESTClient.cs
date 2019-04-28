@@ -103,7 +103,7 @@ namespace SharpBCH.Node
             var ret = SendCommand("mempool/contents.json");
             var jObject = WrapDecodeException(() => JObject.Parse(ret));
 
-            return WrapDecodeException(() => jObject.Properties().ToDictionary(property => property.Name, 
+            return WrapDecodeException(() => jObject.Properties().ToDictionary(property => property.Name,
                 property => property.Value.ToObject<MemPoolTxInfo>()));
         }
 
@@ -149,6 +149,9 @@ namespace SharpBCH.Node
         public Transaction.Transaction GetTransactionById(string txid)
         {
             var ret = SendCommand("tx/" + txid + ".hex").Trim();
+
+            if (ret.Contains("not found"))
+                return null;
 
             return WrapDecodeException(() => new Transaction.Transaction(ByteHexConverter.StringToByteArray(ret)));
         }
@@ -257,20 +260,20 @@ namespace SharpBCH.Node
         [JsonObject]
         public class MemPoolTxInfo
         {
-            [JsonProperty("size")] public uint Size;
-            [JsonProperty("fee")] public double Fee;
-            [JsonProperty("modifiedfee")] public double ModifiedFee;
-            [JsonProperty("time")] public ulong Time;
-            [JsonProperty("height")] public ulong Height;
-            [JsonProperty("startingpriority")] public double StartingPriority;
-            [JsonProperty("currentpriority")] public double CurrentPriority;
-            [JsonProperty("descendantcount")] public uint DescendantCount;
-            [JsonProperty("descendantsize")] public uint DescendantSize;
-            [JsonProperty("descendantfees")] public ulong DescendantFees;
             [JsonProperty("ancestorcount")] public uint AncestorCount;
-            [JsonProperty("ancestorsize")] public uint AncestorSize;
             [JsonProperty("ancestorfees")] public ulong AncestorFees;
+            [JsonProperty("ancestorsize")] public uint AncestorSize;
+            [JsonProperty("currentpriority")] public double CurrentPriority;
             [JsonProperty("depends")] public string[] Depends;
+            [JsonProperty("descendantcount")] public uint DescendantCount;
+            [JsonProperty("descendantfees")] public ulong DescendantFees;
+            [JsonProperty("descendantsize")] public uint DescendantSize;
+            [JsonProperty("fee")] public double Fee;
+            [JsonProperty("height")] public ulong Height;
+            [JsonProperty("modifiedfee")] public double ModifiedFee;
+            [JsonProperty("size")] public uint Size;
+            [JsonProperty("startingpriority")] public double StartingPriority;
+            [JsonProperty("time")] public ulong Time;
         }
     }
 }

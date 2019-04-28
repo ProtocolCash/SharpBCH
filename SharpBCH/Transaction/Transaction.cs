@@ -39,6 +39,7 @@ namespace SharpBCH.Transaction
         public Output[] Outputs { get; private set; }
 
         public string TXIDHex { get; set; }
+        public byte[] TXID { get; }
         public uint TXVersion { get; private set; }
         public uint LockTime { get; private set; }
         public bool LengthMatch { get; private set; }
@@ -54,7 +55,8 @@ namespace SharpBCH.Transaction
         {
             var sha256 = new SHA256Managed();
             // double sha256 hash, reverse bytes, then convert to hex
-            TXIDHex = ByteHexConverter.ByteArrayToHex(sha256.ComputeHash(sha256.ComputeHash(ByteData)).Reverse().ToArray());
+            TXID = sha256.ComputeHash(sha256.ComputeHash(ByteData)).Reverse().ToArray();
+            TXIDHex = ByteHexConverter.ByteArrayToHex(TXID);
             Decode();
         }
 
@@ -67,7 +69,8 @@ namespace SharpBCH.Transaction
         public Transaction(IEnumerable<byte> txBytes, string inclusionBlockHex, uint txVersion, Input[] inputs, Output[] outputs, uint lockTime) : base(txBytes)
         {
             var sha256 = new SHA256Managed();
-            TXIDHex = ByteHexConverter.ByteArrayToHex(sha256.ComputeHash(sha256.ComputeHash(ByteData)).Reverse().ToArray());
+            TXID = sha256.ComputeHash(sha256.ComputeHash(ByteData)).Reverse().ToArray();
+            TXIDHex = ByteHexConverter.ByteArrayToHex(TXID);
             IncludedInBlockHex = inclusionBlockHex;
             TXVersion = txVersion;
             Inputs = inputs;

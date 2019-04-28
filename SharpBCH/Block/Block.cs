@@ -69,13 +69,14 @@ namespace SharpBCH.Block
             {
                 Decode();
 
-                // Validate merkleroot
-                var tx = Transactions.Select(transaction => transaction.TXIDHex).ToArray();
-                var calculatedRoot = ByteHexConverter.ByteArrayToHex(Header.MerkleRootHash.Reverse().ToArray()).ToLower();
-                var blockRoot = MerkleTree.BuildMerkleRoot(tx);
-                if (blockRoot != calculatedRoot)
+                // Validate merkle root
+                // calculate the merkle root from the transaction tree
+                var calculatedRoot = MerkleTree.BuildMerkleRoot(Transactions.Select(transaction => transaction.TXIDHex).ToArray());
+
+                // compare to the merkle root found in the header
+                if (Header.MerkleRootHashHex.ToLower() != calculatedRoot)
                     throw new ArgumentException("MerkleRoot is invalid! Calculated MerkleRoot: " + calculatedRoot +
-                                                ". Block MerkleRoot: " + blockRoot);
+                                                ". Block MerkleRoot: " + Header.MerkleRootHashHex.ToLower());
             }
             catch (Exception e)
             {
