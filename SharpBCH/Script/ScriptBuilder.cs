@@ -125,7 +125,7 @@ namespace SharpBCH.Script
         /// </summary>
         /// <param name="data">data to include in the op_return</param>
         /// <returns>Bitcoin OP_RETURN Output Script containing the given data</returns>
-        public static Script CreateOpReturn(byte[] data)
+        public static Script CreateOutputOpReturn(byte[] data)
         {
             try
             {

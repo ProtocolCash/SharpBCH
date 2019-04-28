@@ -21,6 +21,8 @@
  *
  */
 
+using SharpBCH.Util;
+
 namespace SharpBCH.Transaction
 {
     /// <summary>
@@ -28,22 +30,35 @@ namespace SharpBCH.Transaction
     /// </summary>
     public class Input
     {
-        // hash of the transaction that created the output being redeemed
+        /// <summary>
+        /// hash of the transaction that created the output being redeemed
+        /// </summary>
         public byte[] Hash;
-        // index of the output for redeemed UTXO in the previous transaction
+
+        /// <summary>
+        /// index of the output for redeemed UTXO in the previous transaction
+        /// </summary>
         public uint Index;
-        // storage of the output script
-        private Script.Script _script;
-        // public getter/setter for the output script
+
+
+        public string ScriptHex => _script.ScriptBytes.Length > 0 ? ByteHexConverter.ByteArrayToHex(_script.ScriptBytes) : null;
+
+        /// <summary>
+        /// public getter/setter for the input script
+        /// </summary>
         public byte[] Script
         {
             get => _script.ScriptBytes;
             set => _script = new Script.Script(value);
         }
 
-        // sequence number
-        // - at least one input must have a non-max sequence number,
-        //   otherwise transaction lock_time is ignored
+        /// <summary>
+        /// sequence number
+        /// - at least one input must have a non-max sequence number, otherwise transaction lock_time is ignored 
+        /// </summary>
         public uint Sequence;
+        
+        // storage of the input script 
+        private Script.Script _script;
     }
 }

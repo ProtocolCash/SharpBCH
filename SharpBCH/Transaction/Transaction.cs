@@ -107,7 +107,7 @@ namespace SharpBCH.Transaction
                 Outputs[i] = new Output
                 {
                     Value = ReadUInt64(),
-                    Script = ReadSlice(
+                    ScriptBytes = ReadSlice(
                         (int)ReadVarLenInt()) // script length maximum is 520 bytes, so casting to int should be fine
                 };
 

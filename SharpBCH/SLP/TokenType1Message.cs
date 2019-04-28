@@ -8,7 +8,18 @@ namespace SharpBCH.SLP
 {
     public class TokenType1Message : Token.SLPMessage
     {
-        public TokenType1Message(TokenType1.TransactionType transactionType)
+        public override string ToString()
+        {
+            return base.ToString() + " TokenType1";
+        }
+
+        protected static readonly List<byte[]> DefaultDataHeader = new List<byte[]>
+        {
+            "SLP\0".Select(x => (byte) x).ToArray(), // 534c5000 in hex
+            new byte[] {1}
+        };
+
+        protected TokenType1Message(TokenType1.TransactionType transactionType) : base(DefaultDataHeader)
         {
             TransactionType = transactionType;
         }
@@ -28,13 +39,32 @@ namespace SharpBCH.SLP
                 Decimals = decimals;
                 MintBatonVOut = mintBatonVOut;
                 InitialTokenMintQuantity = initialTokenMintQuantity;
+
+                DataChunks.AddRange(new List<byte[]>
+                {
+                    "GENESIS".Select(x => (byte) x).ToArray(),
+                    tokenTickerBytes,
+                    tokenNameBytes,
+                    tokenDocumentUrlBytes,
+                    tokenDocumentHash,
+                    new[] { decimals },
+                    new[] { mintBatonVOut },
+                    BitConverter.GetBytes(initialTokenMintQuantity).Reverse().ToArray()
+                });
             }
 
-            public GenesisMessage(List<byte[]> dataChunks) : this(dataChunks[4], dataChunks[5],
-            dataChunks[6], dataChunks[7], dataChunks[8][0],
-            dataChunks[9][0], BitConverter.ToUInt64(dataChunks[10]))
+            public GenesisMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks[4],
+            dataChunks[5], dataChunks[6], dataChunks[7][0],
+            dataChunks[8][0], BitConverter.ToUInt64(dataChunks[9].Reverse().ToArray()))
             {
                 DataChunks = dataChunks;
+            }
+
+            public override string ToString()
+            {
+                return base.ToString() + " GENESIS TokenTicker: " + TokenTicker + "; TokenName: " + TokenName + "; TokenDocumentUrl: " +
+                       TokenDocumentUrl + "; TokenDocumentHash: " + TokenDocumentHashHex + "; Decimals: " + Decimals +
+                       "; MintBatonVOut: " + MintBatonVOut + "; InitialTokenMintQuantity: " + InitialTokenMintQuantity;
             }
 
             public string TokenTicker => Encoding.ASCII.GetString(TokenTickerBytes);
@@ -52,15 +82,28 @@ namespace SharpBCH.SLP
 
         public class MintMessage : TokenType1Message
         {
-            public MintMessage(byte[] tokenId, byte mintBatonVOut, ulong additionalTokenQuantity) : base(TokenType1
-                .TransactionType.MINT)
+            public MintMessage(byte[] tokenId, byte mintBatonVOut, ulong additionalTokenQuantity) : base(TokenType1.TransactionType.MINT)
             {
                 TokenId = tokenId;
                 MintBatonVOut = mintBatonVOut;
                 AdditionalTokenQuantity = additionalTokenQuantity;
+
+                DataChunks.AddRange(new List<byte[]>
+                {
+                    "MINT".Select(x => (byte) x).ToArray(),
+                    tokenId,
+                    new[] { mintBatonVOut },
+                    BitConverter.GetBytes(additionalTokenQuantity).Reverse().ToArray()
+                });
             }
 
-            public MintMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks[4].Length == 0 ? (byte) 0 : dataChunks[4][0], BitConverter.ToUInt64(dataChunks[5]))
+            public override string ToString()
+            {
+                return base.ToString() + " MINT TokenId: " + TokenIdHex + "; MintBatonVOut: " + MintBatonVOut +
+                       " AdditionalTokenQuantity: " + AdditionalTokenQuantity;
+            }
+
+            public MintMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks[4].Length == 0 ? (byte) 0 : dataChunks[4][0], BitConverter.ToUInt64(dataChunks[5].Reverse().ToArray()))
             {
                 DataChunks = dataChunks;
             }
@@ -73,20 +116,31 @@ namespace SharpBCH.SLP
 
         public class SendMessage : TokenType1Message
         {
-            public SendMessage(byte[] tokenId, byte[][] tokenOutputQuantities) : base(TokenType1.TransactionType.SEND)
+            public SendMessage(byte[] tokenId, ulong[] tokenOutputQuantities) : base(TokenType1.TransactionType.SEND)
             {
                 TokenId = tokenId;
                 TokenOutputQuantities = tokenOutputQuantities;
+
+                DataChunks.Add("SEND".Select(x => (byte)x).ToArray());
+                DataChunks.Add(tokenId);
+                DataChunks.AddRange(TokenOutputQuantityBytes);
             }
 
-            public SendMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks.Skip(3).ToArray())
+            public override string ToString()
+            {
+                return base.ToString() + " SEND TokenId: " + TokenIdHex + "; TokenOutputQuantities (" + TokenOutputQuantities.Length +
+                       "): [" + string.Join(", ", TokenOutputQuantities.ToList()) + "]";
+            }
+
+            public SendMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks.Skip(4).ToArray().Select(x => BitConverter.ToUInt64(x.Reverse().ToArray())).ToArray())
             {
                 DataChunks = dataChunks;
             }
 
             public byte[] TokenId { get; }
             public string TokenIdHex => ByteHexConverter.ByteArrayToHex(TokenId);
-            public byte[][] TokenOutputQuantities { get; }
+            public byte[][] TokenOutputQuantityBytes => TokenOutputQuantities.Select(x => BitConverter.GetBytes(x).Reverse().ToArray()).ToArray();
+            public ulong[] TokenOutputQuantities { get; }
         }
 
         public class CommitMessage : TokenType1Message
@@ -100,6 +154,23 @@ namespace SharpBCH.SLP
                 ForBitcoinBlockHeight = forBitcoinBlockHeight;
                 TokenTransactionSetHash = tokenTransactionSetHash;
                 TransactionSetDocumentUrlBytes = transactionSetDocumentUrlBytes;
+
+                DataChunks.AddRange(new List<byte[]>
+                {
+                    "COMMIT".Select(x => (byte) x).ToArray(),
+                    tokenId,
+                    forBitcoinBlockHash,
+                    BitConverter.GetBytes(forBitcoinBlockHeight).Reverse().ToArray(),
+                    tokenTransactionSetHash,
+                    transactionSetDocumentUrlBytes
+                });
+            }
+
+            public override string ToString()
+            {
+                return base.ToString() + " COMMIT TokenId: " + TokenIdHex + "; ForBitcoinBlockHash: " + ForBitcoinBlockHashHex +
+                       "; ForBitcoinBlockHeight: " + ForBitcoinBlockHeight + "; TokenTransactionSetHash: " +
+                       TokenTransactionSetHashHex + "; TransactionSetDocumentUrl: " + TransactionSetDocumentUrl;
             }
 
             public CommitMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks[4],

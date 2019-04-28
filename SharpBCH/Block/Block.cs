@@ -139,7 +139,7 @@ namespace SharpBCH.Block
                     // script length maximum is 1650 bytes, so casting to int should be fine
                     // https://github.com/Bitcoin-ABC/bitcoin-abc/blob/master/src/policy/policy.h#L46
                     Value = ReadUInt64(),
-                    Script = ReadSlice(
+                    ScriptBytes = ReadSlice(
                         (int)ReadVarLenInt()) 
                 };
 

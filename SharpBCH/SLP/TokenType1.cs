@@ -6,7 +6,7 @@ using SharpBCH.Script;
 
 namespace SharpBCH.SLP
 {
-    public class TokenType1 : Token
+    public static class TokenType1
     {
         public enum TransactionType
         {
@@ -16,23 +16,18 @@ namespace SharpBCH.SLP
             COMMIT
         }
 
-        private IEnumerable<byte> Combine(IEnumerable<byte> a1, IEnumerable<byte> a2)
-        {
-            foreach (var b in a1)
-                yield return b;
-            foreach (var b in a2)
-                yield return b;
-        }
-
-        public Script.Script CreateCommitScript(byte[] tokenId, byte[] forBitcoinBlockHash, ulong blockHeight,
+        public static Script.Script CreateCommitScript(byte[] tokenId, byte[] forBitcoinBlockHash, ulong blockHeight,
             byte[] tokenTransactionMerkleRoot, string tokenTransactionSetUrl)
         {
+            // token_id must be 32 bytes
             if (tokenId.Length != 32)
                 throw new ArgumentException(
                     "Invalid tokenId! Expected 32 bytes, received " + tokenId.Length + " bytes.");
+            // for_bitcoin_block_hash must be 32 bytes
             if (forBitcoinBlockHash.Length != 32)
                 throw new ArgumentException("Invalid forBitcoinBlockHash! Expected 32 bytes, received " +
                                             forBitcoinBlockHash.Length + " bytes.");
+            // token_ must be 32 bytes
             if (tokenTransactionMerkleRoot.Length != 32)
                 throw new ArgumentException("Invalid tokenTransactionMerkleRoot! Expected 32 bytes, received " +
                                             tokenTransactionMerkleRoot.Length + " bytes.");
@@ -57,7 +52,7 @@ namespace SharpBCH.SLP
                 .Concat(ScriptBuilder.GetOpPushForLength((ulong) Encoding.ASCII.GetByteCount(tokenTransactionSetUrl),
                     false)).Concat(Encoding.ASCII.GetBytes(tokenTransactionSetUrl));
 
-            return ScriptBuilder.CreateOpReturn(byteData.ToArray());
+            return ScriptBuilder.CreateOutputOpReturn(byteData.ToArray());
         }
 
         /// <summary>
@@ -71,7 +66,7 @@ namespace SharpBCH.SLP
         /// <param name="mintBatonVOut"></param>
         /// <param name="mintQuantity"></param>
         /// <returns></returns>
-        public Script.Script CreateGenesisScript(byte[] ticker, byte[] name, byte[] documentUrl, byte[] documentHash,
+        public static Script.Script CreateGenesisScript(byte[] ticker, byte[] name, byte[] documentUrl, byte[] documentHash,
             byte decimals, byte mintBatonVOut, ulong mintQuantity)
         {
             // header
@@ -111,7 +106,7 @@ namespace SharpBCH.SLP
                 : byteData.Concat(ScriptBuilder.GetOpPushForLength(1)).Concat(new[] {mintBatonVOut});
             byteData = byteData.Concat(ScriptBuilder.GetOpPushForLength(8)).Concat(BitConverter.GetBytes(mintQuantity));
 
-            return ScriptBuilder.CreateOpReturn(byteData.ToArray());
+            return ScriptBuilder.CreateOutputOpReturn(byteData.ToArray());
         }
 
         /// <summary>
@@ -121,7 +116,7 @@ namespace SharpBCH.SLP
         /// <param name="mintBatonVOut"></param>
         /// <param name="mintQuantity"></param>
         /// <returns></returns>
-        public Script.Script CreateMintScript(byte[] tokenId, byte mintBatonVOut, ulong mintQuantity)
+        public static Script.Script CreateMintScript(byte[] tokenId, byte mintBatonVOut, ulong mintQuantity)
         {
             if (tokenId.Length != 32)
                 throw new ArgumentException(
@@ -146,7 +141,7 @@ namespace SharpBCH.SLP
                 : byteData.Concat(ScriptBuilder.GetOpPushForLength(1)).Concat(new[] {mintBatonVOut});
             byteData = byteData.Concat(ScriptBuilder.GetOpPushForLength(8)).Concat(BitConverter.GetBytes(mintQuantity));
 
-            return ScriptBuilder.CreateOpReturn(byteData.ToArray());
+            return ScriptBuilder.CreateOutputOpReturn(byteData.ToArray());
         }
 
         /// <summary>
@@ -155,7 +150,7 @@ namespace SharpBCH.SLP
         /// <param name="tokenId"></param>
         /// <param name="tokenOutputQuantities"></param>
         /// <returns></returns>
-        public Script.Script CreateSendScript(byte[] tokenId, ulong[] tokenOutputQuantities)
+        public static Script.Script CreateSendScript(byte[] tokenId, ulong[] tokenOutputQuantities)
         {
             // header
             var byteData = GetHeaderBytes();
@@ -186,13 +181,13 @@ namespace SharpBCH.SLP
                     .GetOpPushForLength(8)
                     .Concat(BitConverter.GetBytes(tokenOutputQuantity))));
 
-            return ScriptBuilder.CreateOpReturn(byteData.ToArray());
+            return ScriptBuilder.CreateOutputOpReturn(byteData.ToArray());
         }
 
-        private IEnumerable<byte> GetHeaderBytes()
+        private static IEnumerable<byte> GetHeaderBytes()
         {
             // SLP\x00 (4 byte ascii header)
-            var byteData = ScriptBuilder.GetOpPushForLength(4).Concat(_opReturnPrefix);
+            var byteData = ScriptBuilder.GetOpPushForLength(4).Concat(Token.OpReturnPrefix);
             // token_type
             byteData = byteData.Concat(ScriptBuilder.GetOpPushForLength(1)).Concat(new byte[] {0x1});
             return byteData;
@@ -203,12 +198,35 @@ namespace SharpBCH.SLP
             return null == source || source.All(b => b <= 127);
         }
 
+        public static bool DoesScriptHaveValidHeader(Script.Script script)
+        {
+            try
+            {
+                ValidateSLPScriptHeader(script);
+                return true;
+            }
+            catch (InvalidSLPScriptException)
+            {
+                return false;
+            }
+        }
+
+        public static void ValidateSLPScriptHeader(Script.Script script)
+        {
+            // validate SLP format
+            Token.ValidateSLPScriptHeader(script);
+            // check version number
+            if (script.DataChunks[1].Length != 1 || script.DataChunks[1][0] != 1)
+                throw new InvalidSLPScriptException("SLP version violates spec - expected 1 or 2 bytes, but received " +
+                                                    script.DataChunks[1].Length + ".");
+        }
+
         /// <summary>
         ///     ReadScript
         /// </summary>
         /// <param name="script"></param>
         /// <exception cref="InvalidSLPScriptException"></exception>
-        public override SLPMessage ReadSLPScript(Script.Script script)
+        public static TokenType1Message ReadSLPScript(Script.Script script)
         {
             /*
                 <lokad_id: 'SLP\x00'> (4 bytes, ascii)
@@ -216,16 +234,11 @@ namespace SharpBCH.SLP
              */
             ValidateSLPScriptHeader(script);
 
-            if (!script.DataChunks[1].Equals(1))
-                throw new InvalidSLPScriptException(
-                    "Script is for an unsupport SLP version - expected 1, but received " +
-                    (int) script.DataChunks[1][0] + ".");
-
             if (script.DataChunks.Count == 2)
                 throw new InvalidSLPScriptException("Script is missing an SLP command in the 3rd data chunk.");
 
 
-            if (new[] {4, 6, 7}.Contains(script.DataChunks[2].Length))
+            if (!new[] {4, 6, 7}.Contains(script.DataChunks[2].Length))
                 throw new InvalidSLPScriptException(
                     "SLP command is invalid length. Excepted 4, 6, or 7 ASCII characters, but received " +
                     script.DataChunks[2].Length);
@@ -289,7 +302,7 @@ namespace SharpBCH.SLP
                             script.DataChunks.Count + ".");
                     // token_id must be 32 bytes
                     if (script.DataChunks[3].Length != 32)
-                        throw new InvalidSLPScriptException("Invalid tokenId! Expected 32 bytes, but received " +
+                        throw new InvalidSLPScriptException("Invalid TokenId! Expected 32 bytes, but received " +
                                                             script.DataChunks[4].Length + " bytes.");
                     // there can be anywhere from 1 to 19 outputs, each must be 8 bytes
                     for (var i = 4; i < script.DataChunks.Count; i++)
@@ -309,7 +322,7 @@ namespace SharpBCH.SLP
 
                     // token_id must be 32 bytes
                     if (script.DataChunks[3].Length != 32)
-                        throw new InvalidSLPScriptException("Invalid tokenId! Expected 32 bytes, received " +
+                        throw new InvalidSLPScriptException("Invalid TokenId! Expected 32 bytes, received " +
                                                             script.DataChunks[4].Length + " bytes.");
                     // mint_baton_vout can be 0 or 1 bytes, but must not equal 1
                     if (script.DataChunks[4].Length > 1)
@@ -335,11 +348,11 @@ namespace SharpBCH.SLP
 
                     // token_id must be 32 bytes
                     if (script.DataChunks[3].Length != 32)
-                        throw new InvalidSLPScriptException("Invalid tokenId! Expected 32 bytes, received " +
+                        throw new InvalidSLPScriptException("Invalid TokenId! Expected 32 bytes, received " +
                                                             script.DataChunks[4].Length + " bytes.");
                     // for_bitcoin_block_hash must be 32 bytes
                     if (script.DataChunks[4].Length != 32)
-                        throw new InvalidSLPScriptException("Invalid forBitcoinBlockHash! Expected 32 bytes, received " +
+                        throw new InvalidSLPScriptException("Invalid ForBitcoinBlockHash! Expected 32 bytes, received " +
                                                             script.DataChunks[4].Length + " bytes.");
                     // block_height must be 8 bytes
                     if (script.DataChunks[5].Length != 8)
