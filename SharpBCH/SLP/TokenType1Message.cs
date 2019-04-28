@@ -55,7 +55,7 @@ namespace SharpBCH.SLP
 
             public GenesisMessage(List<byte[]> dataChunks) : this(dataChunks[3], dataChunks[4],
             dataChunks[5], dataChunks[6], dataChunks[7][0],
-            dataChunks[8][0], BitConverter.ToUInt64(dataChunks[9].Reverse().ToArray()))
+            dataChunks[8].Length == 1 ? dataChunks[8][0] : (byte) 0, BitConverter.ToUInt64(dataChunks[9].Reverse().ToArray()))
             {
                 DataChunks = dataChunks;
             }
