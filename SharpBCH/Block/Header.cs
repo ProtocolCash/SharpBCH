@@ -39,7 +39,7 @@ namespace SharpBCH.Block
         public uint BlockVersion { get; private set; }
         public string PrevBlockHash { get; private set; }
         public byte[] MerkleRootHash { get; private set; }
-        public string MerkleRootHashHex => ByteHexConverter.ByteArrayToHex(MerkleRootHash).Reverse().ToArray().ToString();
+        public string MerkleRootHashHex => ByteHexConverter.ByteArrayToHex(MerkleRootHash.Reverse().ToArray());
         public uint TimeStamp { get; private set; }
         public uint DiffTarget { get; private set; }
         public uint Nonce { get; private set; }
