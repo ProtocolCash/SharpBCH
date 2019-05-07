@@ -105,6 +105,9 @@ namespace SharpBCH.Transaction
         private ScriptType GetOutputType()
         {
             // OP_RETURN Data output (non-transactional)
+            if (Script.OpCodes.Count < 1)
+                return ScriptType.OTHER;
+
             if (Script.OpCodes[0] == OpCodeType.OP_RETURN)
                 return ScriptType.DATA;
 
